@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 
 public class Main {
-    public static OpenAiService service= new OpenAiService("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");
+    public static OpenAiService service= new OpenAiService("INSERT CHATGPT API KEY HERE");
     public static String userResearch="";
     public static void main(String[] args) {
         SQLiteDataBase dataBase= new SQLiteDataBase();
