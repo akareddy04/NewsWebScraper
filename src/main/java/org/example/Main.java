@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    public static OpenAiService service= new OpenAiService("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");
+    public static OpenAiService service= new OpenAiService("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");
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -28,9 +28,8 @@ public class Main {
     }
     private static String generateSummary(String url) {
         StringBuilder summaryBuilder = new StringBuilder();
-        String prompt="Please generate a summary based on the content of the following article: ";
-        CompletionRequest completionRequest = CompletionRequest.builder()
-                .prompt(prompt).model("gpt-3.5-turbo-16k").maxTokens(4000).echo(false).temperature(0.0).build();
+        String prompt="Please generate a concise summary based on the text content in this url: "+url;
+        CompletionRequest completionRequest=CompletionRequest.builder().prompt(prompt).model("text-davinci-002").echo(false).temperature(0.0).maxTokens(4000).build();
        try {
            service.createCompletion(completionRequest).getChoices();
            List<com.theokanning.openai.completion.CompletionChoice> choices=service.createCompletion(completionRequest).getChoices();
