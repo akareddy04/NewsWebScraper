@@ -1,77 +1,130 @@
 package org.example;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import com.theokanning.openai.completion.CompletionRequest;
+import com.theokanning.openai.service.OpenAiService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class Main {
+    public static OpenAiService service= new OpenAiService("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");
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         List<String> providedUrls= new ArrayList<String>();
-        System.out.println("Enter the URL's one at a time for the news articles you wish to scrape. Enter 'EXIT' when you are done");
         while(true) {
+            System.out.println("Enter the URL's one at a time for the news articles you wish to scrape. Enter 'EXIT' when you are done");
             String input=scanner.nextLine();
             if(input.equalsIgnoreCase("EXIT")) {
                 break;
             }
             providedUrls.add(input);
         }
+        for(String url: providedUrls) {
+            System.out.println(generateReport(url));
+            System.out.println();
+        }
 
     }
-    private static String scrapeUrlText(String url) {
+    private static String generateSummary(String url) {
+        StringBuilder summaryBuilder = new StringBuilder();
+        String prompt="Please generate a summary based on the content of the following article: ";
+        CompletionRequest completionRequest = CompletionRequest.builder()
+                .prompt(prompt).model("gpt-3.5-turbo-16k").maxTokens(4000).echo(false).temperature(0.0).build();
+       try {
+           service.createCompletion(completionRequest).getChoices();
+           List<com.theokanning.openai.completion.CompletionChoice> choices=service.createCompletion(completionRequest).getChoices();
+           for (com.theokanning.openai.completion.CompletionChoice choice: choices) {
+               summaryBuilder.append(choice.getText()).append("\n");
+           }
+           return summaryBuilder.toString();
+
+       }catch(Exception e) {
+           System.err.println("An error occurred while generating the summary: "+e.getMessage());
+           return "";
+       }
+
+    }
+    private static String generateTopic(String url) {
+        StringBuilder themeBuilder = new StringBuilder();
+        String prompt="Please determine the topic of the article in one word and the reason why: "+url;
+        CompletionRequest completionRequest=CompletionRequest.builder().prompt(prompt).model("text-davinci-002").echo(false).temperature(0.0).maxTokens(4000).build();
         try {
-            Document document= Jsoup.connect(url).get();
-            Element article=document.select("div.article-content").first();
-            return article.text();
+            service.createCompletion(completionRequest).getChoices();
+            List<com.theokanning.openai.completion.CompletionChoice> choices=service.createCompletion(completionRequest).getChoices();
+            for (com.theokanning.openai.completion.CompletionChoice choice: choices) {
+                themeBuilder.append(choice.getText()).append("\n");
+            }
+            return themeBuilder.toString();
         }catch(Exception e) {
-            System.err.println("An error occurred: "+e.getMessage());
+            System.err.println("An error occurred while generating the summary: "+e.getMessage());
             return "";
         }
     }
-    private static String scrapeUrlDate(String url) {
+    private static String determineValiditySource(String url) {
+        StringBuilder validityBuilder = new StringBuilder();
+        String prompt="Please determine if the source of the article is reliable or unreliable and the reason why: "+url;
+        CompletionRequest completionRequest=CompletionRequest.builder().prompt(prompt).model("text-davinci-002").echo(false).temperature(0.0).maxTokens(4000).build();
         try {
-            Document document=Jsoup.connect(url).get();
-            Element article=document.select("span.date").first();
-            return article.text();
+            service.createCompletion(completionRequest).getChoices();
+            List<com.theokanning.openai.completion.CompletionChoice> choices=service.createCompletion(completionRequest).getChoices();
+            for (com.theokanning.openai.completion.CompletionChoice choice: choices) {
+                validityBuilder.append(choice.getText()).append("\n");
+            }
+            return validityBuilder.toString();
+
         }catch(Exception e) {
-            System.err.println("An error occurred: "+e.getMessage());
+            System.err.println("An error occurred while generating the summary: "+e.getMessage());
             return "";
         }
     }
-    private static String scraperUrlAuthor(String url) {
+    private static String extractKeyInformation(String url) {
+        StringBuilder keyInformation = new StringBuilder();
+        String prompt="Determine the key information of the following article such as people, events, places, dates, and more: "+url;
+        CompletionRequest completionRequest=CompletionRequest.builder().prompt(prompt).model("text-davinci-002").echo(false).temperature(0.0).maxTokens(4000).build();
         try {
-            Document document=Jsoup.connect(url).get();
-            Element article=document.selectFirst("span.author");
-            return article.text();
-        }catch(Exception e) {
-            System.err.println("An error occurred: "+e.getMessage());
-            return "";
-
-
-        }
-    }
-    private static String scraperUrlHost(String url) {
-        try {
-            Document document=Jsoup.connect(url).get();
-            java.net.URL javaUrl = new java.net.URL(url);
-            return javaUrl.getHost();
+            service.createCompletion(completionRequest).getChoices();
+            List<com.theokanning.openai.completion.CompletionChoice> choices=service.createCompletion(completionRequest).getChoices();
+            for (com.theokanning.openai.completion.CompletionChoice choice: choices) {
+                keyInformation.append(choice.getText()).append("\n");
+            }
+            return keyInformation.toString();
 
         }catch(Exception e) {
-            System.err.println(e.getMessage());
+            System.err.println("An error occurred while generating the key information "+e.getMessage());
             return "";
         }
     }
-    private static String gptAnswer(String articleText) {
-        
+    private static String extractTone(String url) {
+        StringBuilder tone = new StringBuilder();
+        String prompt="Determine the tone of the article and the reasons why "+url;
+        CompletionRequest completionRequest=CompletionRequest.builder().prompt(prompt).model("text-davinci-002").echo(false).temperature(0.0).maxTokens(4000).build();
+        try {
+            service.createCompletion(completionRequest).getChoices();
+            List<com.theokanning.openai.completion.CompletionChoice> choices=service.createCompletion(completionRequest).getChoices();
+            for (com.theokanning.openai.completion.CompletionChoice choice: choices) {
+                tone.append(choice.getText()).append("\n");
+            }
+            return tone.toString();
+
+        }catch(Exception e) {
+            System.err.println("An error occurred while generating the tone: "+e.getMessage());
+            return "";
+        }
+    }
+
+    private static String generateReport(String url) {
+        String summary=generateSummary(url);
+        String theme=generateTopic(url);
+        String validitySource=determineValiditySource(url);
+        String report = "Here is the following report for the article provided with the url" + url + ": " + "\n" +
+                "Summary of the article: " + summary + "\n" +
+                "Theme of the article: " + theme + "\n" +
+                "Validity of the source: " + validitySource + "\n"+
+                "Tone of Article: "+extractTone(url)+"\n"+
+                "Key Information from the article: "+extractKeyInformation(url)+"\n";
+        return report;
+
     }
 
 
